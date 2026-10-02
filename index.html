@@ -1,0 +1,55 @@
+<!doctype html><html lang="it"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1597e5"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Le mie spese"><link rel="manifest" href="manifest.json">
+<title>Le mie spese</title>
+<style>
+body{margin:0;background:#f3f9fd;color:#123247;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding-bottom:80px}
+header{background:linear-gradient(135deg,#1597e5,#55c4f4);color:#fff;padding:calc(20px + env(safe-area-inset-top)) 18px 22px;border-radius:0 0 24px 24px}
+h1{margin:0}main{max-width:700px;margin:auto;padding:15px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{background:#fff;border-radius:18px;padding:15px;margin-bottom:12px;box-shadow:0 4px 18px #0a5a7d12}.label{font-size:13px;color:#718898}.big{font-size:23px;font-weight:800;margin-top:5px}
+.title{font-size:20px;font-weight:800;margin:20px 0 10px}.form{display:grid;gap:10px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+input,select,button{width:100%;padding:12px;border-radius:13px;border:1px solid #d7e6ef;font:inherit;box-sizing:border-box}button{background:#1597e5;color:#fff;border:0;font-weight:700}
+.danger{background:#ffecec;color:#b33}.item{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #edf2f5}.item:last-child{border:0}
+.item small{color:#718898}.amount{font-weight:800;text-align:right}.empty{text-align:center;color:#718898;padding:20px}.pill{padding:5px 9px;border-radius:99px;background:#e9f6fd;color:#0878bd;font-size:12px}
+.ok{background:#eaf9ef;color:#168347}.warn{background:#fff3df;color:#9a6700}.hidden{display:none}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #dcebf3;display:grid;grid-template-columns:repeat(4,1fr);padding:7px 7px calc(7px + env(safe-area-inset-bottom));z-index:5}
+.nav button{background:none;color:#718898;font-size:12px;padding:6px 2px}.nav .active{color:#1597e5;font-weight:800}
+@media(max-width:390px){.grid,.row{grid-template-columns:1fr}}
+</style></head><body>
+<header><h1>Le mie spese</h1><p>Il tuo budget, semplice e sempre con te.</p></header><main>
+<section id="home"><div class="grid">
+<div class="card"><div class="label">Disponibile nell’anno</div><div id="av" class="big">€ 0,00</div></div>
+<div class="card"><div class="label">Spese annuali</div><div id="xt" class="big">€ 0,00</div></div>
+<div class="card"><div class="label">Entrate annuali</div><div id="it" class="big">€ 0,00</div></div>
+<div class="card"><div class="label">Obiettivo risparmio</div><div id="st" class="big">€ 0,00</div></div></div>
+<div class="card"><div class="label">Media spese mensile</div><div id="mx" class="big">€ 0,00</div><span id="bs" class="pill">Budget non impostato</span></div>
+<div class="title">Budget</div><div class="card form">
+<div class="row"><label>Entrate annuali<input id="inc" type="number" min="0" step=".01"></label><label>Soldi già disponibili<input id="cash" type="number" min="0" step=".01"></label></div>
+<div class="row"><label>Obiettivo risparmio<input id="sav" type="number" min="0" step=".01"></label><label>Budget mensile<input id="bud" type="number" min="0" step=".01"></label></div>
+<button onclick="settings()">Salva budget</button></div></section>
+
+<section id="spese" class="hidden"><div class="title">Spese</div><div class="card form">
+<input id="en" placeholder="Cosa devi pagare?"><div class="row"><input id="ea" type="number" min="0" step=".01" placeholder="Importo €"><select id="ec"></select></div>
+<div class="row"><select id="ef"></select><input id="et" type="number" min="1" value="1" placeholder="Volte/anno"></div>
+<input id="eno" placeholder="Note (facoltative)"><button onclick="addE()">+ Aggiungi spesa</button></div><div id="el" class="card"></div></section>
+
+<section id="entrate" class="hidden"><div class="title">Entrate</div><div class="card form"><input id="inn" placeholder="Nome entrata"><input id="ina" type="number" min="0" step=".01" placeholder="Importo €"><button onclick="addI()">+ Aggiungi entrata</button></div><div id="il" class="card"></div></section>
+
+<section id="gestione" class="hidden"><div class="title">Categorie</div><div class="card form"><input id="cn" placeholder="Nuova categoria"><button onclick="cat()">+ Aggiungi categoria</button><div id="cl"></div></div>
+<div class="title">Frequenze</div><div class="card form"><input id="fn" placeholder="Nuova frequenza"><button onclick="freq()">+ Aggiungi frequenza</button><div id="fl"></div></div></section>
+</main><nav class="nav"><button class="active" onclick="tab('home',this)">🏠<br>Home</button><button onclick="tab('spese',this)">💸<br>Spese</button><button onclick="tab('entrate',this)">💰<br>Entrate</button><button onclick="tab('gestione',this)">⚙️<br>Gestione</button></nav>
+<script>
+const K='lms1';let d=JSON.parse(localStorage.getItem(K)||'null')||{s:{i:0,c:0,s:0,b:0},c:['Casa','Auto','Spesa','Bollette','Abbonamenti','Salute','Tempo libero','Altro'],f:['Una volta','Mensile','Trimestrale','Semestrale','Annuale'],e:[],i:[]};
+const €=n=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(n||0),E=x=>String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function save(){localStorage.setItem(K,JSON.stringify(d));render()}function render(){inc.value=d.s.i||'';cash.value=d.s.c||'';sav.value=d.s.s||'';bud.value=d.s.b||'';let x=d.e.reduce((a,e)=>a+(+e.a||0)*(+e.t||1),0);av.textContent=€((+d.s.c||0)+(+d.s.i||0)-x-(+d.s.s||0));xt.textContent=€(x);it.textContent=€(d.s.i);st.textContent=€(d.s.s);mx.textContent=€(x/12);let b=+d.s.b||0;bs.textContent=b?(x/12<=b?'Nel budget':'Sopra il budget'):'Budget non impostato';bs.className='pill '+(b?(x/12<=b?'ok':'warn'):'');ec.innerHTML=d.c.map(E).map(x=>'<option>'+x+'</option>').join('');ef.innerHTML=d.f.map(E).map(x=>'<option>'+x+'</option>').join('');
+el.innerHTML=d.e.length?d.e.map((e,i)=>'<div class=item><div><b>'+E(e.n)+'</b><br><small>'+E(e.c)+' · '+E(e.f)+' · '+e.t+' volta/e anno</small></div><div class=amount>'+€((+e.a||0)*(+e.t||1))+'<br><button class=danger style="width:auto;padding:6px" onclick="de('+i+')">Elimina</button></div></div>').join(''):'<div class=empty>Nessuna spesa.</div>';
+il.innerHTML=d.i.length?d.i.map((e,i)=>'<div class=item><b>'+E(e.n)+'</b><div class=amount>'+€(e.a)+'<br><button class=danger style="width:auto;padding:6px" onclick="di('+i+')">Elimina</button></div></div>').join(''):'<div class=empty>Nessuna entrata dettagliata.</div>';
+cl.innerHTML=d.c.map((x,i)=>'<div class=item>'+E(x)+'<button class=danger style="width:auto" onclick="dc('+i+')">Elimina</button></div>').join('');fl.innerHTML=d.f.map((x,i)=>'<div class=item>'+E(x)+'<button class=danger style="width:auto" onclick="df('+i+')">Elimina</button></div>').join('')}
+function settings(){d.s={i:+inc.value||0,c:+cash.value||0,s:+sav.value||0,b:+bud.value||0};save();alert('Budget salvato')}
+function addE(){if(!en.value.trim()||+ea.value<=0)return alert('Inserisci nome e importo');d.e.push({n:en.value.trim(),a:+ea.value,c:ec.value,f:ef.value,t:+et.value||1});en.value=ea.value='';et.value=1;save()}function de(i){d.e.splice(i,1);save()}
+function addI(){if(!inn.value.trim()||+ina.value<=0)return alert('Inserisci nome e importo');d.i.push({n:inn.value.trim(),a:+ina.value});inn.value=ina.value='';save()}function di(i){d.i.splice(i,1);save()}
+function cat(){let x=cn.value.trim();if(x&&!d.c.includes(x)){d.c.push(x);cn.value='';save()}}function dc(i){if(d.c.length>1){d.c.splice(i,1);save()}}
+function freq(){let x=fn.value.trim();if(x&&!d.f.includes(x)){d.f.push(x);fn.value='';save()}}function df(i){if(d.f.length>1){d.f.splice(i,1);save()}}
+function tab(id,b){document.querySelectorAll('main section').forEach(x=>x.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');scrollTo(0,0)}render();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
